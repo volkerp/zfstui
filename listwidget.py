@@ -3,7 +3,11 @@ import curses.panel
 
 
 MAINMENU = ['[F2] Pools', '[F3] Volumes', '[F4] Filesystems', '[F5] Snapshots', '[F10] Quit']
-
+MAINMENU_POOLS = 0
+MAINMENU_VOLS  = 1
+MAINMENU_FSYS  = 2
+MAINMENU_SNAP  = 3
+MAINMENU_QUIT  = 4
 
 def pprint(window, text):
     if isinstance(text, list):
@@ -124,7 +128,7 @@ class Widget:
             else:
                 self.window.addnstr(i+1 + h_ofs, 1, line, w-2,curses.A_NORMAL)
                 
-        if self.footer:
+        if self.footer and self.keyboard_focus:
             self.window.move(h-1, 4)
             self.window.addstr(self.footer)
 
@@ -132,8 +136,15 @@ class Widget:
     def handle_key(self, key):
         h, w = self.window.getmaxyx()
         visiblelines = h - 2 - (1 if self.headerline else 0)
+        
         self.key_callback(self.lines[self.selline], key) if self.key_callback else None
-        if key == curses.KEY_UP:
+        if key == 27:  # ESC or ALT
+            self.window.nodelay(True)
+            n = self.window.getch()
+            if n == -1:  # ESC
+                self.window.nodelay(False)
+                self._call_close_callback()
+        elif key == curses.KEY_UP:
             if self.selline > 0:
                 self.selline -= 1
             if self.selline < self.ofs:
@@ -160,8 +171,7 @@ class Widget:
                 callback, data = self.rowselect_callback
                 callback(self.selline, data)
         elif key == ord('q'):
-            callback, data = self.close_callback
-            callback(data)
+            self._call_close_callback()
        
         self.draw()
 
@@ -177,6 +187,11 @@ class Widget:
         self.close_callback = callback, data
 
 
+    def _call_close_callback(self):
+        if self.close_callback:
+            callback, data = self.close_callback
+            callback(data)
+        
 
     
 

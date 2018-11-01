@@ -79,10 +79,140 @@ since its contents are identical.
 
 This property can also be referred to by its shortened column name, refer.
 """),
-('type',
+(
+'refcompressratio',
+"""The compression ratio achieved for the referenced space of this dataset, 
+expressed as a multiplier. See also the compressratio property.
+"""),
+(
+'snapshot_count',
+"""The total number of snapshots that exist under this location in the 
+dataset tree.  This value is only available when a snapshot_limit has 
+been set somewhere in the tree under which the dataset resides.
+"""),
+(
+'type',
 """The type of dataset: filesystem, volume, or snapshot.
-"""
-)
+"""),
+(
+'used',
+"""The  amount  of  space  consumed  by  this  dataset  and  all its 
+descendents. This is the value that is checked against this dataset's
+quota and reservation. The space used does not include this dataset's 
+reservation, but does take into  account the reservations of any 
+descendent datasets. The amount of space that a dataset consumes 
+from its parent, as well as the amount of space that are freed if 
+this dataset is recursively destroyed, is the greater of its space
+used and its reservation.
+
+When snapshots (see the "Snapshots" section) are created, their space
+is initially shared between the snapshot and the file system, and possibly
+with previous snapshots. As the file system changes, space that was 
+previously shared becomes unique to the snapshot, and counted in the 
+snapshot's space used. Additionally, deleting snapshots can increase 
+the amount of space unique to (and used by) other snapshots.
+
+The amount of space used, available, or referenced does not take into
+account pending changes. Pending changes are generally accounted for
+within a few seconds. Committing a change to a disk using fsync(2) 
+or O_SYNC  does not necessarily guarantee that the space usage information
+is updated immediately.
+"""),
+(
+'usedby*',
+"""The usedby* properties decompose the used properties into the various
+reasons that space is used. Specifically, 
+used = used‐ bychildren + usedbydataset + usedbyrefreservation +,
+usedbysnapshots. These properties are only available for datasets created 
+on zpool "version 13" pools.
+"""),
+(
+'usedbychildren',
+"""The amount of space used by children of this dataset, which would be freed
+if all the dataset's children were destroyed.
+"""),
+(
+'usedbydataset',
+"""The amount of space used by this dataset itself, which would be freed
+if the dataset were destroyed (after first removing any refreservation and
+destroying any necessary snapshots or descendents).
+"""),
+(
+'usedbyrefreservation',
+"""The amount of space used by a refreservation set on this dataset, 
+which would be freed if the refreservation was removed.
+"""),
+(
+'usedbysnapshots',
+"""The amount of space consumed by snapshots of this dataset. 
+In particular, it is the amount of space that would be freed if all of this
+dataset's snapshots were destroyed. Note that this is not simply the sum 
+of the snapshots' used properties because space can be shared by 
+multiple snapshots.
+"""),
+(
+'userused@user',
+"""The amount of space consumed by the specified user in this dataset. 
+Space is charged to the owner of each file, as displayed by ls -l. 
+The amount of space charged is displayed by du and ls -s. See the zfs 
+userspace subcommand for more information.
+
+Unprivileged users can access only their own space usage. The root user, 
+or a user who has been granted the userused privilege with zfs allow, 
+can access everyone's usage.
+
+The userused@... properties are not displayed by zfs get all. The user's 
+name must be appended after the @ symbol, using one of the following forms:
+
+           o      POSIX name (for example, joe)
+
+           o      POSIX numeric ID (for example, 789)
+
+           o      SID name (for example, joe.smith@mydomain)
+
+           o      SID numeric ID (for example, S-1-123-456-789)
+"""),
+(
+'userrefs',
+"""This property is set to the number of user holds on this snapshot.
+User holds are set by using the zfs hold command.
+"""),
+(
+'groupused@group',
+"""The amount of space consumed by the specified group in this dataset.
+Space is charged to the group of each file, as displayed by ls -l. 
+See the userused@user property for more information.
+
+Unprivileged users can only access their own groups' space usage. 
+The root user, or a user who has been granted the groupused privilege 
+with zfs allow, can access all groups' usage.
+"""),
+(
+'volblocksize=blocksize',
+"""For  volumes, specifies the block size of the volume. The blocksize
+cannot be changed once the volume has been written, so it should be set
+at volume creation time. The default blocksize for volumes is 8 Kbytes. 
+Any power of 2 from 512 bytes to 128 Kbytes is valid.
+
+This property can also be referred to by its shortened column name, volblock.
+"""),
+(
+'written',
+"""The amount of referenced space written to this dataset since the 
+previous snapshot.
+"""),
+(
+'written@snapshot',
+"""The amount of referenced space written to this dataset since the 
+specified snapshot. This is the space that is referenced by this dataset
+but was not referenced by the specified snapshot.
+
+The snapshot may be specified as a short snapshot name (just the part
+after the @), in which case it will be interpreted as a snapshot in the same
+filesystem as this dataset. The snapshot be a full snapshot name 
+(filesystem@snapshot), which for clones may be a snapshot in the origin's
+filesystem (or the origin of the origin's filesystem, etc).
+""")
 ]
 
 

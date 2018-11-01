@@ -31,7 +31,7 @@ def zfsListSnapshots():
 
 
 def zfsListSnapshotsOf(dataset):
-    cmd = ["zfs", "list", "-r", "-o", "name,used,creation,compressratio,referenced,written", "-t", "snap", dataset]
+    cmd = ["zfs", "list", "-r", "-o", "name,creation,used,compressratio,referenced,written", "-t", "snap", dataset]
     stdout = subprocess.check_output(cmd, universal_newlines=True)
     return stdout.splitlines()
 

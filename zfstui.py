@@ -3,10 +3,8 @@ import curses.panel
 import zfs
 import os
 import sys
-from listwidget import MainMenu, Widget
+from listwidget import *
 import helptext
-
-
 
 GLOBAL = {
     'stdscr': None,
@@ -16,21 +14,23 @@ GLOBAL = {
 }
 
 
-
 def on_mainmenu_entry_changed(index):
     GLOBAL['overlay'] = None
-    if index == 0:
+    if index == MAINMENU_POOLS:
         set_contents_pools(GLOBAL['mainwidget'])
-    elif index == 1:
+    elif index == MAINMENU_VOLS:
         set_contents_volumes(GLOBAL['mainwidget'])
-    elif index == 2:
+    elif index == MAINMENU_FSYS:
         set_contents_filesystems(GLOBAL['mainwidget'])
-    elif index == 3:
+    elif index == MAINMENU_SNAP:
         set_contents_snapshots(GLOBAL['mainwidget'])
         
 
 def on_mainmenu_entry_selected(index):
-    set_keyboard_focus(GLOBAL['mainwidget'])
+    if index == MAINMENU_QUIT:
+        sys.exit()
+    else:
+        set_keyboard_focus(GLOBAL['mainwidget'])
 
 
 def on_poollist_key_press(entry, key):
@@ -110,7 +110,7 @@ def set_contents_pools(widget):
     lines = zfs.zfsListPools()
     widget.set_header_line(lines[0])
     widget.set_text_list(lines[1:])
-    widget.footer = "[Ent] Properties───[h] History──[i] Iostat"
+    widget.footer = "[Ret] Properties────[H] History───[I] Iostat"
     widget.set_caption("Pools")
     widget.set_rowselected_callback(on_pool_selected, widget)
     widget.key_callback = on_poollist_key_press
@@ -118,17 +118,19 @@ def set_contents_pools(widget):
 
 def set_contents_volumes(widget):
     lines = zfs.zfsListVolumes()
-    widget.set_caption("Volumes")
     widget.set_header_line(lines[0])
     widget.set_text_list(lines[1:])
+    widget.footer = "[Ret] Properties"
+    widget.set_caption("Volumes")    
     widget.set_rowselected_callback(on_dataset_selected, widget)
 
 
 def set_contents_snapshots(widget):
     lines = zfs.zfsListSnapshots()
     widget.set_header_line(lines[0])
+    widget.set_text_list(lines[1:]) 
+    widget.footer = "[Ret] Properties"
     widget.set_caption("Snapshots")
-    widget.set_text_list(lines[1:])
     widget.set_rowselected_callback(on_snapshot_selected, widget)
 
 
@@ -136,7 +138,7 @@ def set_contents_filesystems(widget):
     lines = zfs.zfsListFilesystems()
     widget.set_header_line(lines[0])
     widget.set_text_list(lines[1:])
-    widget.footer = "[RET] Properties───[S] Snapshots"
+    widget.footer = "[Ret] Properties───[S] Snapshots"
     widget.set_caption("Filesystems")
     widget.set_rowselected_callback(on_snapshot_selected, widget)
     widget.key_callback = on_filesystemlist_key_press
@@ -153,13 +155,12 @@ def main(stdscr):
     h, w = GLOBAL['stdscr'].getmaxyx()
 
     if h < 24 or w < 80:
-        sys.exit('Terminal size must be at least 80x40')
+        sys.exit('Terminal size must be at least 80x24')
    
     zfs.check_zfs_executables()
 
     curses.curs_set(0)
     stdscr.clear()
-
 
     subwin = stdscr.subwin(1, w, 0, 0)
     mainmenu = MainMenu(subwin)
@@ -177,7 +178,6 @@ def main(stdscr):
 
     GLOBAL['mainmenu'].set_keyboard_focus(True)
     GLOBAL['focuswidget'] = GLOBAL['mainmenu']
-
 
     curses.panel.update_panels()
     curses.doupdate()
@@ -229,6 +229,6 @@ def main(stdscr):
         curses.panel.update_panels()
         curses.doupdate()
 
-
+os.environ.setdefault('ESCDELAY', '50')
 curses.wrapper(main)
 curses.curs_set(True)
