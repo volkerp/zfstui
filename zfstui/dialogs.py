@@ -1,10 +1,10 @@
 import curses
 import curses.panel
-import zfs
+from . import zfs
 import os
 import sys
-from listwidget import *
-import helptext
+from .widgets import *
+from .helptext import *
 
 GLOBAL = {
     'stdscr': None,
@@ -150,7 +150,7 @@ def set_keyboard_focus(widget):
     GLOBAL['focuswidget'].set_keyboard_focus(True)
 
 
-def main(stdscr):
+def mainloop(stdscr):
     GLOBAL['stdscr'] = stdscr
     h, w = GLOBAL['stdscr'].getmaxyx()
 
@@ -228,7 +228,3 @@ def main(stdscr):
 
         curses.panel.update_panels()
         curses.doupdate()
-
-os.environ.setdefault('ESCDELAY', '50')
-curses.wrapper(main)
-curses.curs_set(True)

@@ -15,5 +15,6 @@ setuptools.setup(
         "Intended Audience :: System Administrators",
         "Topic :: System :: Filesystems"
     ],
+    scripts = ['bin/zfstui'],
 )
 
