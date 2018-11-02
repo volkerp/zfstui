@@ -4,6 +4,13 @@ import os
 import curses
 from zfstui import dialogs
 
+'''
+zfstui
+terminal user interface to the ZFS filesystem
+
+(c) 2018 Volker Poplawski
+'''
+
 
 
 def main():

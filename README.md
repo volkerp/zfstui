@@ -1,2 +1,4 @@
 # zfstui
-Terminal user interface for zfs
+Terminal user interface for the ZFS filesystem
+
+
