@@ -2,7 +2,7 @@ import curses
 import curses.panel
 
 
-MAINMENU = ['[F2] Pools', '[F3] Volumes', '[F4] Filesystems', '[F5] Snapshots', '[F10] Quit']
+MAINMENU = ['[F2]Pools', '[F3]Volumes', '[F4]Filesysts', '[F5]Snapshots', '[F10]Quit']
 MAINMENU_POOLS = 0
 MAINMENU_VOLS  = 1
 MAINMENU_FSYS  = 2
@@ -45,7 +45,8 @@ class MainMenu:
                 self.window.addstr(entry, curses.A_REVERSE)
             else:
                 self.window.addstr(entry, curses.A_NORMAL)
-            self.window.addstr('    ', curses.A_NORMAL)
+            if i != len(MAINMENU) - 1:
+                self.window.addstr('    ', curses.A_NORMAL)
         self.window.refresh()
 
 
