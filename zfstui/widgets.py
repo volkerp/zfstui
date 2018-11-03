@@ -72,7 +72,8 @@ class Widget:
         self.footer = None
         self.window.keypad(1)
         self.selline = 0   # highlighted line
-        self.ofs = 0       # first displayed line
+        self.y_ofs = 0       # first displayed line
+        self.x_ofs = 0       # first displayed column
         self.rowselect_callback = None
         self.close_callback = None
         self.key_callback = None
@@ -93,10 +94,14 @@ class Widget:
 
 
     def set_text_list(self, listofstr):
+        self.lines = []
         self.selline = 0
-        self.ofs = 0
+        self.y_ofs = self.x_ofs = 0
+        self.maxlinelen = 0
         self.footer = None
-        self.lines = listofstr
+        for line in listofstr:
+            self.maxlinelen = max(self.maxlinelen, len(line))
+            self.lines.append(line)
         self.draw()
 
 
@@ -120,14 +125,14 @@ class Widget:
             self.window.addnstr(1, 1, self.headerline, w-2, curses.A_NORMAL)
             h_ofs = 1
 
-        for i, line in enumerate(self.lines[self.ofs:]):
+        for i, line in enumerate(self.lines[self.y_ofs:]):
             if i + h_ofs == h-2:
                 break
             line = line.ljust(w-2)
-            if i + self.ofs == self.selline and self.keyboard_focus:
-                self.window.addnstr(i+1 + h_ofs, 1, line, w-2, curses.A_REVERSE)
+            if i + self.y_ofs == self.selline and self.keyboard_focus:
+                self.window.addnstr(i+1 + h_ofs, 1, line[self.x_ofs:], w-2, curses.A_REVERSE)
             else:
-                self.window.addnstr(i+1 + h_ofs, 1, line, w-2,curses.A_NORMAL)
+                self.window.addnstr(i+1 + h_ofs, 1, line[self.x_ofs:], w-2,curses.A_NORMAL)
                 
         if self.footer and self.keyboard_focus:
             self.window.move(h-1, 4)
@@ -136,7 +141,7 @@ class Widget:
 
     def handle_key(self, key):
         h, w = self.window.getmaxyx()
-        visiblelines = h - 2 - (1 if self.headerline else 0)
+        vis_h, vis_w = h - 2 - (1 if self.headerline else 0), w - 2    # visible lines/cols
         
         self.key_callback(self.lines[self.selline], key) if self.key_callback else None
         if key == 27:  # ESC or ALT
@@ -148,24 +153,28 @@ class Widget:
         elif key == curses.KEY_UP:
             if self.selline > 0:
                 self.selline -= 1
-            if self.selline < self.ofs:
-                self.ofs = self.selline     # scroll up by one line
+            if self.selline < self.y_ofs:
+                self.y_ofs = self.selline     # scroll up by one line
         elif key == curses.KEY_DOWN:
             if self.selline < len(self.lines) - 1:
                 self.selline += 1
-            if self.selline > self.ofs + visiblelines -1:
-                self.ofs += 1
+            if self.selline > self.y_ofs + vis_h -1:
+                self.y_ofs += 1
+        elif key == curses.KEY_LEFT:
+            self.x_ofs = max(0, self.x_ofs - 1)
+        elif key == curses.KEY_RIGHT:
+            self.x_ofs = max(0, min(self.x_ofs + 1, self.maxlinelen - vis_w))
         elif key == curses.KEY_PPAGE:
-            self.ofs = max(0, self.ofs - visiblelines)
-            self.selline = self.ofs
+            self.y_ofs = max(0, self.y_ofs - vis_h)
+            self.selline = self.y_ofs
         elif key == curses.KEY_NPAGE:
-            self.ofs = min(self.ofs + visiblelines, len(self.lines)-visiblelines)
-            self.selline = self.ofs
+            self.y_ofs = min(self.y_ofs + vis_h, len(self.lines)-vis_h)
+            self.selline = self.y_ofs
         elif key == curses.KEY_HOME:
-            self.ofs = 0
-            self.selline = self.ofs
+            self.y_ofs = 0
+            self.selline = self.y_ofs
         elif key == curses.KEY_END:
-            self.ofs = len(self.lines)-visiblelines
+            self.y_ofs = len(self.lines)-vis_h
             self.selline = len(self.lines) - 1             # place cursor on last line
         elif key == ord('\n') or key == curses.KEY_ENTER:
             if self.selline is not None and self.rowselect_callback is not None:

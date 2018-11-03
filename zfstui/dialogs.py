@@ -4,7 +4,7 @@ from . import zfs
 import os
 import sys
 from .widgets import *
-from .helptext import *
+from . import helptext
 
 GLOBAL = {
     'stdscr': None,
