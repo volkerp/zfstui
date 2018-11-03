@@ -1,6 +1,9 @@
 # zfstui
 Terminal user interface for the ZFS filesystem
 
+![screenshot1](images/screenshot1.png "screenshot1")
+
+
 ## Installation
 
 ### From PyPI
