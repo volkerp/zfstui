@@ -2,6 +2,7 @@
 Terminal user interface for the ZFS filesystem
 
 ![screenshot1](images/screenshot1.png "screenshot1")
+![screenshot2](images/screenshot2.png "screenshot2")
 
 
 ## Installation
