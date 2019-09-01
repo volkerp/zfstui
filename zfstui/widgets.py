@@ -2,12 +2,13 @@ import curses
 import curses.panel
 
 
-MAINMENU = ['[F2]Pools', '[F3]Volumes', '[F4]Filesysts', '[F5]Snapshots', '[F10]Quit']
+MAINMENU = ['[F2]Pools', '[F3]Volumes', '[F4]Filesysts', '[F5]Snapshots', '[F6]Cache', '[F10]Quit']
 MAINMENU_POOLS = 0
 MAINMENU_VOLS  = 1
 MAINMENU_FSYS  = 2
 MAINMENU_SNAP  = 3
-MAINMENU_QUIT  = 4
+MAINMENU_CACHE = 4
+MAINMENU_QUIT  = 5
 
 def pprint(window, text):
     if isinstance(text, list):
@@ -192,14 +193,15 @@ class Widget:
         elif key == ord('\n') or key == curses.KEY_ENTER:
            if self.selline is not None and self.rowselect_callback is not None:
                 callback, data = self.rowselect_callback
-                callback(self.selline, data)
+                if callback is not None:
+                    callback(self.selline, data)
         elif key == ord('q'):
             self._call_close_callback()
        
         self.draw()
 
  
-    def set_rowselected_callback(self, callback, data):
+    def set_rowselected_callback(self, callback, data=None):
         self.rowselect_callback = callback, data
 
     

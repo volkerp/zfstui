@@ -5,6 +5,7 @@ import os
 import sys
 from .widgets import *
 from . import helptext
+from .arcstats import *
 
 GLOBAL = {
     'stdscr': None,
@@ -24,7 +25,9 @@ def on_mainmenu_entry_changed(index):
         set_contents_filesystems(GLOBAL['mainwidget'])
     elif index == MAINMENU_SNAP:
         set_contents_snapshots(GLOBAL['mainwidget'])
-        
+    elif index == MAINMENU_CACHE:
+        set_contents_cache(GLOBAL['mainwidget'])
+
 
 def on_mainmenu_entry_selected(index):
     if index == MAINMENU_QUIT:
@@ -143,6 +146,20 @@ def set_contents_filesystems(widget):
     widget.set_rowselected_callback(on_snapshot_selected, widget)
     widget.key_callback = on_filesystemlist_key_press
 
+
+def set_contents_cache(widget):
+    widget.set_caption('Cache statistics')
+    widget.set_header_line(None)
+    kstat = read_kstat()
+    lines = []
+    lines.append('ARC size: {} (configured min: {}, configured max: {})'.format(format_bytes(kstat['size']), format_bytes(kstat['c_min']), format_bytes(kstat['c_max'])))
+    h, m = kstat['hits'], kstat['misses']
+    lines.append('ARC hit ratio: {}% (hits: {}, misses: {})'.format(round(h/(h+m)*100.0), h, m))
+    widget.set_text_list(lines)
+    widget.set_rowselected_callback(None)
+    widget.key_callback = None
+
+
 def set_keyboard_focus(widget):
     print(type(widget))
     GLOBAL['focuswidget'].set_keyboard_focus(False)
@@ -214,6 +231,11 @@ def mainloop(stdscr):
             GLOBAL['overlay'] = None
             set_keyboard_focus(GLOBAL['mainwidget'])
             set_contents_snapshots(GLOBAL['mainwidget'])
+        elif key == curses.KEY_F6:
+            GLOBAL['mainmenu'].set_highlight_idx(4)
+            GLOBAL['overlay'] = None
+            set_keyboard_focus(GLOBAL['mainwidget'])
+            set_contents_cache(GLOBAL['mainwidget'])
         elif key == ord('\t'):
             if GLOBAL['focuswidget'] == GLOBAL['mainmenu']:
                 set_keyboard_focus(curses.panel.top_panel().userptr())
