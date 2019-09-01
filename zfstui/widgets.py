@@ -71,7 +71,7 @@ class Widget:
         self.caption = caption
         self.footer = None
         self.window.keypad(1)
-        self.selline = 0   # highlighted line
+        self.selline = None  # highlighted line
         self.y_ofs = 0       # first displayed line
         self.x_ofs = 0       # first displayed column
         self.rowselect_callback = None
@@ -95,13 +95,17 @@ class Widget:
 
     def set_text_list(self, listofstr):
         self.lines = []
-        self.selline = 0
         self.y_ofs = self.x_ofs = 0
         self.maxlinelen = 0
         self.footer = None
+        self.selline = None
         for line in listofstr:
             self.maxlinelen = max(self.maxlinelen, len(line))
             self.lines.append(line)
+
+        if len(self.lines) > 0:
+            self.selline = 0
+
         self.draw()
 
 
@@ -113,7 +117,7 @@ class Widget:
     def draw(self):
         self.window.clear()
         self.window.box()
-
+ 
         h, w = self.window.getmaxyx()
         if self.caption:
             #self.window.addstr(0, 4, self.caption, curses.A_NORMAL)
@@ -142,8 +146,11 @@ class Widget:
     def handle_key(self, key):
         h, w = self.window.getmaxyx()
         vis_h, vis_w = h - 2 - (1 if self.headerline else 0), w - 2    # visible lines/cols
-        
-        self.key_callback(self.lines[self.selline], key) if self.key_callback else None
+
+        # call the key_callback (if any) with selected line and the pressed key
+        if self.key_callback and self.selline is not None:
+            self.key_callback(self.lines[self.selline], key)
+
         if key == 27:  # ESC or ALT
             self.window.nodelay(True)
             n = self.window.getch()
@@ -151,33 +158,39 @@ class Widget:
                 self.window.nodelay(False)
                 self._call_close_callback()
         elif key == curses.KEY_UP:
-            if self.selline > 0:
-                self.selline -= 1
-            if self.selline < self.y_ofs:
-                self.y_ofs = self.selline     # scroll up by one line
+            if self.selline is not None:
+                if self.selline > 0:
+                    self.selline -= 1
+                if self.selline < self.y_ofs:     # hit top of window?
+                    self.y_ofs = self.selline     # scroll up by one line
         elif key == curses.KEY_DOWN:
-            if self.selline < len(self.lines) - 1:
-                self.selline += 1
-            if self.selline > self.y_ofs + vis_h -1:
-                self.y_ofs += 1
+            if self.selline is not None:
+                if self.selline < len(self.lines) - 1:
+                    self.selline += 1
+                if self.selline > self.y_ofs + vis_h -1:  # hit bottom of window?
+                    self.y_ofs += 1                       # scroll down one line
         elif key == curses.KEY_LEFT:
             self.x_ofs = max(0, self.x_ofs - 1)
         elif key == curses.KEY_RIGHT:
             self.x_ofs = max(0, min(self.x_ofs + 1, self.maxlinelen - vis_w))
         elif key == curses.KEY_PPAGE:
             self.y_ofs = max(0, self.y_ofs - vis_h)
-            self.selline = self.y_ofs
+            if self.selline is not None:
+                self.selline = self.y_ofs
         elif key == curses.KEY_NPAGE:
             self.y_ofs = min(self.y_ofs + vis_h, len(self.lines)-vis_h)
-            self.selline = self.y_ofs
+            if self.selline is not None:
+                self.selline = self.y_ofs
         elif key == curses.KEY_HOME:
             self.y_ofs = 0
-            self.selline = self.y_ofs
+            if self.selline is not None:
+                self.selline = self.y_ofs
         elif key == curses.KEY_END:
             self.y_ofs = len(self.lines)-vis_h
-            self.selline = len(self.lines) - 1             # place cursor on last line
+            if self.selline is not None:
+                self.selline = len(self.lines) - 1             # place cursor on last line
         elif key == ord('\n') or key == curses.KEY_ENTER:
-            if self.selline is not None and self.rowselect_callback is not None:
+           if self.selline is not None and self.rowselect_callback is not None:
                 callback, data = self.rowselect_callback
                 callback(self.selline, data)
         elif key == ord('q'):
